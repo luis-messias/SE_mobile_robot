@@ -2,6 +2,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/queue.h"
+#include <freertos/semphr.h>
 #include "sdkconfig.h"
 #include "driver/ledc.h"
 #include <utility>
@@ -15,6 +16,9 @@ public:
     EngineDriver(std::pair<int, int> gpios,
                  ledc_timer_t timer,
                  std::pair<ledc_channel_t, ledc_channel_t> channels) : m_channels(channels) {
+
+        xSemaphore = xSemaphoreCreateMutex();
+        xSemaphoreTake(xSemaphore, portMAX_DELAY);
 
         ledc_timer_config_t timer_conf = {
             .speed_mode = LEDC_HIGH_SPEED_MODE,
@@ -45,13 +49,19 @@ public:
         ledc_timer_config(&timer_conf);
         ledc_channel_config(&motorConfA);
         ledc_channel_config(&motorConfB);
+
+        xSemaphoreGive(xSemaphore);
     }
 
     void setOutput(float percentage){
+        xSemaphoreTake(xSemaphore, portMAX_DELAY);
+
         if(percentage > 1.0){
+            xSemaphoreGive(xSemaphore);
             return;
         }
         if(percentage < -1.0){
+            xSemaphoreGive(xSemaphore);
             return;
         }
         if(percentage == 0.0){
@@ -59,6 +69,7 @@ public:
             ledc_set_duty(LEDC_HIGH_SPEED_MODE, m_channels.second, 32768);
             ledc_update_duty(LEDC_HIGH_SPEED_MODE, m_channels.first);
             ledc_update_duty(LEDC_HIGH_SPEED_MODE, LEDC_CHANNEL_1);
+            xSemaphoreGive(xSemaphore);
             return;
         }
         if(percentage > 0){
@@ -66,6 +77,7 @@ public:
             ledc_set_duty(LEDC_HIGH_SPEED_MODE, m_channels.second, 32768);
             ledc_update_duty(LEDC_HIGH_SPEED_MODE, m_channels.first);
             ledc_update_duty(LEDC_HIGH_SPEED_MODE, m_channels.second);
+            xSemaphoreGive(xSemaphore);
             return;
         }
         if(percentage < 0){
@@ -73,17 +85,22 @@ public:
             ledc_set_duty(LEDC_HIGH_SPEED_MODE, m_channels.second, (int)((1 + percentage) * 32768));
             ledc_update_duty(LEDC_HIGH_SPEED_MODE, m_channels.first);
             ledc_update_duty(LEDC_HIGH_SPEED_MODE, m_channels.second);
+            xSemaphoreGive(xSemaphore);
             return;
         }
     }
 
 private:
     std::pair<ledc_channel_t, ledc_channel_t> m_channels;
+    SemaphoreHandle_t xSemaphore;
 };
 
 void engineMain(void *args) {
 
-    EngineDriver engineDriver = {{25, 26}, LEDC_TIMER_0, std::pair{LEDC_CHANNEL_0, LEDC_CHANNEL_1}};
+    EngineDriver engineDriver = {{25, 26}, 
+                                LEDC_TIMER_0, 
+                                std::pair{LEDC_CHANNEL_0, LEDC_CHANNEL_1}};
+
     float p = -1;
     engineDriver.setOutput(p); 
 
