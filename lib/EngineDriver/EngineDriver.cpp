@@ -20,7 +20,7 @@ void EngineDriver::setOutput(float percentage){
         return;
     }
     if(percentage > 0){
-        ledc_set_duty(LEDC_HIGH_SPEED_MODE, m_channels.first, (int)((1 - percentage) * 32768));
+        ledc_set_duty(LEDC_HIGH_SPEED_MODE, m_channels.first, (int)(percentage * 32768));
         ledc_set_duty(LEDC_HIGH_SPEED_MODE, m_channels.second, 32768);
         ledc_update_duty(LEDC_HIGH_SPEED_MODE, m_channels.first);
         ledc_update_duty(LEDC_HIGH_SPEED_MODE, m_channels.second);
@@ -29,7 +29,7 @@ void EngineDriver::setOutput(float percentage){
     }
     if(percentage < 0){
         ledc_set_duty(LEDC_HIGH_SPEED_MODE, m_channels.first, 32768);
-        ledc_set_duty(LEDC_HIGH_SPEED_MODE, m_channels.second, (int)((1 + percentage) * 32768));
+        ledc_set_duty(LEDC_HIGH_SPEED_MODE, m_channels.second, (int)(-percentage * 32768));
         ledc_update_duty(LEDC_HIGH_SPEED_MODE, m_channels.first);
         ledc_update_duty(LEDC_HIGH_SPEED_MODE, m_channels.second);
         xSemaphoreGive(xSemaphore);
