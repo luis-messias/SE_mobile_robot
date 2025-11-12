@@ -4,7 +4,8 @@
 #define BDC_ENCODER_PCNT_LOW_LIMIT    -1000
 #define PI 3.14159265359
 
-EncoderDriver::EncoderDriver(int portA, int portB){
+EncoderDriver::EncoderDriver(int portA, int portB, float encoderResolution){
+    m_encoderResolution = encoderResolution;
     unit_config = {
         .low_limit = BDC_ENCODER_PCNT_LOW_LIMIT,
         .high_limit = BDC_ENCODER_PCNT_HIGH_LIMIT,
@@ -46,7 +47,7 @@ int EncoderDriver::getCount(){
 }
 
 float EncoderDriver::getRotations(){
-    return ((float)getCount())/823.1;
+    return ((float)getCount())/m_encoderResolution;
 }
 
 float EncoderDriver::getRPM(){

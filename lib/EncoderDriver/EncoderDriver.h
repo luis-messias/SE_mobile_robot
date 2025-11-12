@@ -6,7 +6,7 @@
 
 class EncoderDriver{
 public:
-    EncoderDriver(int portA, int portB);
+    EncoderDriver(int portA, int portB, float encoderResolution);
     int getCount();
     float getRotations();
     float getRPM();
@@ -17,6 +17,7 @@ private:
     pcnt_unit_handle_t pcnt_unit;
     float lastRotation = 0;
     TickType_t xLastTick;
+    float m_encoderResolution;
 };
 
 

@@ -54,15 +54,12 @@ void engineMain2(void *args) {
 	} 
 }
 
-
-
-
 void app_main()
 {	   
     xTaskCreate(&engineMain1, "engineMain1", 2048, NULL, 5, NULL);
     xTaskCreate(&engineMain2, "engineMain2", 2048, NULL, 5, NULL);
 
-    EncoderDriver encoderDriver(21,22);
+    EncoderDriver encoderDriver(21, 22, 823.1);
 
     while(1){
         printf("%f\n", encoderDriver.getRPM());
