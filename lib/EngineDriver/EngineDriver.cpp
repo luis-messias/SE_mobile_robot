@@ -40,13 +40,12 @@ EngineDriver::EngineDriver(std::pair<int, int> gpios,
 void EngineDriver::setOutput(float percentage){
     if (xSemaphoreTake(xSemaphore, portMAX_DELAY) == pdTRUE) {
         if(percentage > 1.0){
-            xSemaphoreGive(xSemaphore);
-            return;
+            percentage = 1;
         }
         if(percentage < -1.0){
-            xSemaphoreGive(xSemaphore);
-            return;
+            percentage = -1;
         }
+        
         if(percentage == 0.0){
             ledc_set_duty(LEDC_HIGH_SPEED_MODE, m_channels.first, 0);
             ledc_set_duty(LEDC_HIGH_SPEED_MODE, m_channels.second, 0);
