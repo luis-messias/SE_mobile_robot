@@ -22,12 +22,18 @@ void task(void *args) {
 
 void app_main()
 {	   
-    EngineDriver engineDriver = {{14, 27}, 
+    EngineDriver engineDriver = {{12, 27}, 
                                 LEDC_TIMER_0, 
                                 std::pair{LEDC_CHANNEL_0, LEDC_CHANNEL_1}};
+    EncoderDriver encoderDriver(21, 22, 823.1);
+
+    // EngineDriver engineDriver = {{26, 25}, 
+    //                             LEDC_TIMER_0, 
+    //                             std::pair{LEDC_CHANNEL_0, LEDC_CHANNEL_1}};
+    // EncoderDriver encoderDriver(32, 13, 823.1);
+
     engineDriver.setOutput(0); 
 
-    EncoderDriver encoderDriver(21, 22, 823.1);
     xTaskCreate(&task, "task", 2048, NULL, 5, NULL);
 
     float setPoint = 60;
