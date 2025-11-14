@@ -21,7 +21,7 @@ typedef struct {
     PID* pid;
 } pidTaskParam;
 
-void pidTask(void *args) {
+void pidEngineTask(void *args) {
     pidTaskParam* pidParams = (pidTaskParam*)args;
 
     EngineDriver* engineDriver = pidParams->engineDriver;
@@ -59,8 +59,8 @@ void app_main()
     pidRight.setSetPoint(60);
 
     vTaskDelay(3000/portTICK_PERIOD_MS);
-    xTaskCreate(&pidTask, "pidLeft", 2048, &pidParamsLeft, 5, NULL);
-    xTaskCreate(&pidTask, "pidRight", 2048, &pidParamsRight, 5, NULL);
+    xTaskCreate(&pidEngineTask, "pidEngineLeft", 2048, &pidParamsLeft, 5, NULL);
+    xTaskCreate(&pidEngineTask, "pidEngineRight", 2048, &pidParamsRight, 5, NULL);
 
     while(1){
         printf("RPM: %f %f\n", encoderDriverLeft.getRPM(),encoderDriverRight.getRPM());
