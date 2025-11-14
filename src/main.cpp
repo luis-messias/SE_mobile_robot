@@ -9,54 +9,61 @@
 
 #include <EngineDriver.h>
 #include <EncoderDriver.h>
+#include <PID.h>
 
 extern "C" {
     void app_main(void);
 }
 
-void task(void *args) {
-	while(1){
-        vTaskDelay(1000/portTICK_PERIOD_MS);
-	} 
+typedef struct {
+    EngineDriver* engineDriver;
+    EncoderDriver* encoderDriver;
+    PID* pid;
+} pidTaskParam;
+
+void pidTask(void *args) {
+    pidTaskParam* pidParams = (pidTaskParam*)args;
+
+    EngineDriver* engineDriver = pidParams->engineDriver;
+    EncoderDriver* encoderDriver = pidParams->encoderDriver;
+    PID* pid = pidParams->pid;
+
+    float out;
+    float rpm;
+
+    while(1){
+        rpm = encoderDriver->getRPM();
+        out = pid->getOut(rpm, 0.1);
+        engineDriver->setOutput(out); 
+        vTaskDelay(100/portTICK_PERIOD_MS);
+    }
 }
 
 void app_main()
 {	   
-    EngineDriver engineDriver = {{12, 27}, 
+    EngineDriver engineDriverLeft = {{12, 27}, 
                                 LEDC_TIMER_0, 
                                 std::pair{LEDC_CHANNEL_0, LEDC_CHANNEL_1}};
-    EncoderDriver encoderDriver(21, 22, 823.1);
+    EncoderDriver encoderDriverLeft(21, 22, 823.1);
+    PID pidLeft = PID(0.003, 0.03, 0.0003);
+    pidTaskParam pidParamsLeft = {&engineDriverLeft, &encoderDriverLeft, &pidLeft};
 
-    // EngineDriver engineDriver = {{26, 25}, 
-    //                             LEDC_TIMER_0, 
-    //                             std::pair{LEDC_CHANNEL_0, LEDC_CHANNEL_1}};
-    // EncoderDriver encoderDriver(32, 13, 823.1);
+    EngineDriver engineDriverRight = {{26, 25}, 
+                                LEDC_TIMER_0, 
+                                std::pair{LEDC_CHANNEL_2, LEDC_CHANNEL_3}};
+    EncoderDriver encoderDriverRight(32, 13, 823.1);
+    PID pidRight = PID(0.003, 0.03, 0.0003);
+    pidTaskParam pidParamsRight = {&engineDriverRight, &encoderDriverRight, &pidRight};
 
-    engineDriver.setOutput(0); 
-
-    xTaskCreate(&task, "task", 2048, NULL, 5, NULL);
-
-    float setPoint = 60;
-    float rpm;
-    float erro = 0;
-    float sumErro = 0;
-    float lastErro = 0;
-    float k = 0.003;
-    float kd = 0.003;
-    float ki = 0.003;
-    float out;
+    pidLeft.setSetPoint(30);
+    pidRight.setSetPoint(60);
 
     vTaskDelay(3000/portTICK_PERIOD_MS);
+    xTaskCreate(&pidTask, "pidLeft", 2048, &pidParamsLeft, 5, NULL);
+    xTaskCreate(&pidTask, "pidRight", 2048, &pidParamsRight, 5, NULL);
+
     while(1){
-        rpm = encoderDriver.getRPM();
-        erro = setPoint - rpm;
-        sumErro += erro;
-
-        out = k * erro + ki * sumErro + kd * (erro - lastErro);
-        printf("%f %f %f %f %f\n", rpm, erro, sumErro, erro - lastErro, out);
-        engineDriver.setOutput(out); 
-
-        lastErro = erro;
-        vTaskDelay(100/portTICK_PERIOD_MS);
+        printf("RPM: %f %f\n", encoderDriverLeft.getRPM(),encoderDriverRight.getRPM());
+        vTaskDelay(1000/portTICK_PERIOD_MS);
     }
 }
