@@ -17,6 +17,7 @@ private:
     pcnt_unit_config_t unit_config;
     pcnt_unit_handle_t pcnt_unit;
     float lastRotation = 0;
+    float lastRPM;
     TickType_t xLastTick;
     float m_encoderResolution;
 };

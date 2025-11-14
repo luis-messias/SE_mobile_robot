@@ -54,19 +54,18 @@ float EncoderDriver::getRotations(){
 }
 
 float EncoderDriver::getRPM(){
-    float rpm = 0;
     if (xSemaphoreTake(xSemaphore, portMAX_DELAY) == pdTRUE) {
         float currentRotation = getRotations();
         TickType_t xCurrentTick = xTaskGetTickCount();
-
-        rpm = 60 * configTICK_RATE_HZ * (currentRotation - lastRotation)/(xCurrentTick - xLastTick);
-
-        lastRotation = currentRotation;
+        if(xCurrentTick != xLastTick){
+            lastRPM = 60 * configTICK_RATE_HZ * (currentRotation - lastRotation)/(xCurrentTick - xLastTick);
+            lastRotation = currentRotation;
+        }
         xLastTick = xCurrentTick;
-        xSemaphoreGive(xSemaphore);
 
+        xSemaphoreGive(xSemaphore);
     }
-    return rpm;
+    return lastRPM;
 }
 
 // float EncoderDriver::getRadSec(){
