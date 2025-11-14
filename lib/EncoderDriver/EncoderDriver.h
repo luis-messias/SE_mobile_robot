@@ -7,12 +7,13 @@
 class EncoderDriver{
 public:
     EncoderDriver(int portA, int portB, float encoderResolution);
-    int getCount();
-    float getRotations();
     float getRPM();
-    float getRadSec();
 
 private:
+    // float getRadSec();
+    float getRotations();
+    int getCount();
+
     pcnt_unit_config_t unit_config;
     pcnt_unit_handle_t pcnt_unit;
     float lastRotation = 0;

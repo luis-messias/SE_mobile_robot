@@ -1,10 +1,10 @@
 #include<EngineDriver.h>
 
+static SemaphoreHandle_t xSemaphore = xSemaphoreCreateMutex();;
+
 EngineDriver::EngineDriver(std::pair<int, int> gpios,
                 ledc_timer_t timer,
                 std::pair<ledc_channel_t, ledc_channel_t> channels) : m_channels(channels) {
-
-    xSemaphore = xSemaphoreCreateMutex();
 
     ledc_timer_config_t timer_conf = {
         .speed_mode = LEDC_HIGH_SPEED_MODE,

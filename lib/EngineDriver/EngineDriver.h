@@ -15,7 +15,6 @@ public:
 
 private:
     std::pair<ledc_channel_t, ledc_channel_t> m_channels;
-    SemaphoreHandle_t xSemaphore;
 };
 
 #endif

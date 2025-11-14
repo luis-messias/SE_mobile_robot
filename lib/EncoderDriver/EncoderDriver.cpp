@@ -4,8 +4,11 @@
 #define BDC_ENCODER_PCNT_LOW_LIMIT    -1000
 #define PI 3.14159265359
 
+static SemaphoreHandle_t xSemaphore = xSemaphoreCreateMutex();;
+
 EncoderDriver::EncoderDriver(int portA, int portB, float encoderResolution){
     m_encoderResolution = encoderResolution;
+
     unit_config = {
         .low_limit = BDC_ENCODER_PCNT_LOW_LIMIT,
         .high_limit = BDC_ENCODER_PCNT_HIGH_LIMIT,
@@ -51,25 +54,29 @@ float EncoderDriver::getRotations(){
 }
 
 float EncoderDriver::getRPM(){
-    float currentRotation = getRotations();
-    TickType_t xCurrentTick = xTaskGetTickCount();
+    float rpm = 0;
+    if (xSemaphoreTake(xSemaphore, portMAX_DELAY) == pdTRUE) {
+        float currentRotation = getRotations();
+        TickType_t xCurrentTick = xTaskGetTickCount();
 
-    float rpm = 60 * configTICK_RATE_HZ * (currentRotation - lastRotation)/(xCurrentTick - xLastTick);
+        rpm = 60 * configTICK_RATE_HZ * (currentRotation - lastRotation)/(xCurrentTick - xLastTick);
 
-    lastRotation = currentRotation;
-    xLastTick = xCurrentTick;
+        lastRotation = currentRotation;
+        xLastTick = xCurrentTick;
+        xSemaphoreGive(xSemaphore);
 
+    }
     return rpm;
 }
 
-float EncoderDriver::getRadSec(){
-    float currentRotation = getRotations();
-    TickType_t xCurrentTick = xTaskGetTickCount();
+// float EncoderDriver::getRadSec(){
+//     float currentRotation = getRotations();
+//     TickType_t xCurrentTick = xTaskGetTickCount();
 
-    float radSec = PI * configTICK_RATE_HZ * (currentRotation - lastRotation)/(xCurrentTick - xLastTick);
+//     float radSec = PI * configTICK_RATE_HZ * (currentRotation - lastRotation)/(xCurrentTick - xLastTick);
 
-    lastRotation = currentRotation;
-    xLastTick = xCurrentTick;
+//     lastRotation = currentRotation;
+//     xLastTick = xCurrentTick;
 
-    return radSec;
-}
+//     return radSec;
+// }
