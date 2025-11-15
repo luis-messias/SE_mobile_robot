@@ -56,7 +56,9 @@ public:
         m_leftWheel(leftWheel),
         m_rightWheel(rightWheel),
         m_wheelsRadius(wheelsRadius),
-        m_wheelsDistance(wheelsDistance) {}
+        m_wheelsDistance(wheelsDistance) {
+            m_odometry = {0,0,0,0,0};
+        }
     
     void setVelocity(float vx, float w){
         float vLeft = vx + w * m_wheelsDistance / 2;
@@ -73,7 +75,7 @@ public:
 
         TickType_t xCurrentTick = xTaskGetTickCount();
         if(xCurrentTick != xLastUpdateTick){
-            float dt = configTICK_RATE_HZ/(xCurrentTick - xLastUpdateTick);
+            float dt = ((float)xCurrentTick - xLastUpdateTick)/configTICK_RATE_HZ;
             float ds = vx * dt;
 
             dAlpha = w * dt;
@@ -85,6 +87,8 @@ public:
         m_odometry = {vx, w, m_odometry.x + dx, m_odometry.y + dy, m_odometry.alpha + dAlpha};
         return m_odometry;
     }
+
+    Odometry getOdometry(){return m_odometry;}
 
 private:
     std::pair<float, float> getVelocity(){
@@ -100,6 +104,16 @@ private:
     Odometry m_odometry;
     TickType_t xLastUpdateTick;
 };
+
+
+void updateOdometry(void *args) {
+    auto robot = (robotHandle *) args;
+
+    while(1){
+        robot->updateOdometry();
+        vTaskDelay(200/portTICK_PERIOD_MS);
+    }
+}
 
 void app_main()
 {	   
@@ -119,19 +133,19 @@ void app_main()
     
     auto robot = robotHandle(&wheelLeft, &wheelRight, 0.130/2, 0.020);
 
-    pidLeft.setSetPoint(30);
-    pidRight.setSetPoint(-30);
-
-    robot.setVelocity(0, 100);
+    robot.setVelocity(0, 20);
+    // pidLeft.setSetPoint(30);
+    // pidRight.setSetPoint(-30);
 
     vTaskDelay(3000/portTICK_PERIOD_MS);
     xTaskCreate(&pidEngineTask, "pidEngineLeft", 2048, &wheelLeft, 5, NULL);
     xTaskCreate(&pidEngineTask, "pidEngineRight", 2048, &wheelRight, 5, NULL);
+    xTaskCreate(&updateOdometry, "odometryUpdate", 2048, &robot, 5, NULL);
 
     while(1){
         printf("RPM: %f %f\n", encoderDriverLeft.getRPM(),encoderDriverRight.getRPM());
 
-        auto [vx, w, x, y, alpha] = robot.updateOdometry();
+        auto [vx, w, x, y, alpha] = robot.getOdometry();
         printf("vx: %f w: %f\n", vx, w);
         printf("x: %f y: %f alpha: %f\n", x, y, alpha);
 
