@@ -10,7 +10,6 @@ public:
     float getRPM();
 
 private:
-    // float getRadSec();
     float getRotations();
     int getCount();
 

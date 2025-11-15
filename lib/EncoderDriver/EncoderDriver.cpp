@@ -67,15 +67,3 @@ float EncoderDriver::getRPM(){
     }
     return lastRPM;
 }
-
-// float EncoderDriver::getRadSec(){
-//     float currentRotation = getRotations();
-//     TickType_t xCurrentTick = xTaskGetTickCount();
-
-//     float radSec = PI * configTICK_RATE_HZ * (currentRotation - lastRotation)/(xCurrentTick - xLastTick);
-
-//     lastRotation = currentRotation;
-//     xLastTick = xCurrentTick;
-
-//     return radSec;
-// }
