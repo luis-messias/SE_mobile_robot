@@ -12,6 +12,8 @@
 #include <EncoderDriver.h>
 #include <PID.h>
 
+#include <rclc/executor.h>
+
 #define PI 3.14159265359
 
 extern "C" {
