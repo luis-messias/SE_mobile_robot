@@ -1,0 +1,37 @@
+services:
+  clean:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: esp-idf-container-clean
+    volumes:
+      - $PWD:$PWD
+    tty: true
+    stdin_open: true
+    working_dir: $PWD
+    command: rm -rf build managed_components && idf.py fullclean
+
+  build:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: esp-idf-container-build
+    volumes:
+      - $PWD:$PWD
+    tty: true
+    stdin_open: true
+    working_dir: $PWD
+    command: idf.py build
+
+
+  flash:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: esp-idf-container-flash
+    volumes:
+      - $PWD:$PWD
+    tty: true
+    stdin_open: true
+    working_dir: $PWD
+    command: idf.py flash
