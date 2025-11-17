@@ -4,7 +4,8 @@ static SemaphoreHandle_t xSemaphore = xSemaphoreCreateMutex();;
 
 EngineDriver::EngineDriver(std::pair<int, int> gpios,
                 ledc_timer_t timer,
-                std::pair<ledc_channel_t, ledc_channel_t> channels) : m_channels(channels) {
+                std::pair<ledc_channel_t, ledc_channel_t> channels,
+                float deadZone) : m_channels(channels), m_deadZone(deadZone){
 
     ledc_timer_config_t timer_conf = {
         .speed_mode = LEDC_HIGH_SPEED_MODE,
@@ -38,6 +39,7 @@ EngineDriver::EngineDriver(std::pair<int, int> gpios,
 }
 
 void EngineDriver::setOutput(float percentage){
+    percentage += (percentage > 0) ? m_deadZone : (percentage < 0) ? -m_deadZone : 0;
     if (xSemaphoreTake(xSemaphore, portMAX_DELAY) == pdTRUE) {
         if(percentage > 1.0){
             percentage = 1;

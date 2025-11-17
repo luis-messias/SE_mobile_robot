@@ -9,7 +9,7 @@ static SemaphoreHandle_t xSemaphore = xSemaphoreCreateMutex();;
 EncoderDriver::EncoderDriver(int portA, int portB, float encoderResolution){
     m_encoderResolution = encoderResolution;
 
-    unit_config = {
+    pcnt_unit_config_t unit_config = {
         .low_limit = BDC_ENCODER_PCNT_LOW_LIMIT,
         .high_limit = BDC_ENCODER_PCNT_HIGH_LIMIT,
         .flags = {1}, // enable counter accumulation
@@ -53,7 +53,7 @@ float EncoderDriver::getRotations(){
     return ((float)getCount())/m_encoderResolution;
 }
 
-float EncoderDriver::getRPM(){
+void EncoderDriver::updateRPM(){
     if (xSemaphoreTake(xSemaphore, portMAX_DELAY) == pdTRUE) {
         float currentRotation = getRotations();
         TickType_t xCurrentTick = xTaskGetTickCount();
@@ -65,5 +65,8 @@ float EncoderDriver::getRPM(){
 
         xSemaphoreGive(xSemaphore);
     }
+}
+
+float EncoderDriver::getRPM(){
     return lastRPM;
 }
