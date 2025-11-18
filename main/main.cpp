@@ -93,7 +93,6 @@ private:
 };
 
 #define deadZone 0.05
-// #define deadZone 0.23
 
 auto engineDriverLeft = EngineDriver({12, 27}, 
                             LEDC_TIMER_0, 
