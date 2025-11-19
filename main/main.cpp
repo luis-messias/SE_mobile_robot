@@ -41,6 +41,8 @@ auto pidRight = PID(0.003, 0.03, 0.0003);
 auto wheelRight = wheelHandle(&engineDriverRight, &encoderDriverRight, &pidRight);
 //Robot handle
 auto robot = robotHandle(&wheelLeft, &wheelRight, 0.130/2, 0.020);
+enum {WaitingForGoal, MovingToGoal} robotState = WaitingForGoal;
+
 // Watchdog for cmd_vel timeout
 static TickType_t lastCmdVelTime = 0;
 static const TickType_t CMD_VEL_TIMEOUT = 2000 / portTICK_PERIOD_MS;  // 1 second timeout
@@ -48,43 +50,81 @@ static const TickType_t CMD_VEL_TIMEOUT = 2000 / portTICK_PERIOD_MS;  // 1 secon
 void cmd_vel_callback(const void * msgin)
 {
     const geometry_msgs__msg__Twist * cmd_vel = (const geometry_msgs__msg__Twist *)msgin;
-    robot.setVelocity(cmd_vel->linear.x, cmd_vel->angular.z);
-    lastCmdVelTime = xTaskGetTickCount();  // Update the timestamp
+    if(robotState == WaitingForGoal){
+        robot.setVelocity(cmd_vel->linear.x, cmd_vel->angular.z);
+        lastCmdVelTime = xTaskGetTickCount();  // Update the timestamp
+    }
+}
+
+void goal_pose_callback(const void * msgin)
+{
+    const geometry_msgs__msg__PoseStamped * goal_pose = (const geometry_msgs__msg__PoseStamped *)msgin;
+    ESP_LOGI("GOAL_POSE", "Received new goal pose: x=%.2f, y=%.2f", 
+             goal_pose->pose.position.x, goal_pose->pose.position.y);
+    robotState = MovingToGoal;
 }
 
 void micro_ros_task(void * arg)
 {
-	rcl_allocator_t allocator = rcl_get_default_allocator();
-	rclc_support_t support;
-	rcl_init_options_t init_options = rcl_get_zero_initialized_init_options();
-	rcl_init_options_init(&init_options, allocator);
-	rmw_init_options_t* rmw_options = rcl_init_options_get_rmw_init_options(&init_options);
-	rmw_uros_options_set_udp_address(CONFIG_MICRO_ROS_AGENT_IP, CONFIG_MICRO_ROS_AGENT_PORT, rmw_options);
-	rclc_support_init_with_options(&support, 0, NULL, &init_options, &allocator);
+    rcl_allocator_t allocator = rcl_get_default_allocator();
+    rclc_support_t support;
+    rcl_init_options_t init_options = rcl_get_zero_initialized_init_options();
+    rcl_init_options_init(&init_options, allocator);
+    rmw_init_options_t* rmw_options = rcl_init_options_get_rmw_init_options(&init_options);
+    rmw_uros_options_set_udp_address(CONFIG_MICRO_ROS_AGENT_IP, CONFIG_MICRO_ROS_AGENT_PORT, rmw_options);
+    rclc_support_init_with_options(&support, 0, NULL, &init_options, &allocator);
     rclc_executor_t executor = rclc_executor_get_zero_initialized_executor();
-	rclc_executor_init(&executor, &support.context, 2, &allocator);
+    rclc_executor_init(&executor, &support.context, 2, &allocator);
     rclc_executor_set_timeout(&executor, RCL_MS_TO_NS(1000));
 
-	// create node
-	rcl_node_t node;
-	rclc_node_init_default(&node, "SE_mobile_robot", "", &support);
+    // create node
+    rcl_node_t node;
+    rclc_node_init_default(&node, "SE_mobile_robot", "", &support);
 
+    // Initialize pose publisher message
     geometry_msgs__msg__PoseStamped pose_msg;
-    pose_msg.header.frame_id.data = (char*)"base_link";
-    pose_msg.header.frame_id.size = strlen("base_link");
+    geometry_msgs__msg__PoseStamped__init(&pose_msg);
+    pose_msg.header.frame_id.data = (char*)"map";
+    pose_msg.header.frame_id.size = strlen("map");
+    pose_msg.header.frame_id.capacity = strlen("map") + 1;
+    
     rcl_publisher_t publisherPose;
-	rcl_ret_t ret0 = rclc_publisher_init_default(
-		&publisherPose,
-		&node,
-		ROSIDL_GET_MSG_TYPE_SUPPORT(geometry_msgs, msg, PoseStamped),
-		"Pose");
+    rcl_ret_t ret0 = rclc_publisher_init_default(
+        &publisherPose,
+        &node,
+        ROSIDL_GET_MSG_TYPE_SUPPORT(geometry_msgs, msg, PoseStamped),
+        "Pose");
     if (ret0 != RCL_RET_OK) {
         ESP_LOGI("UROS", "Failed to create Pose publisher: %d", ret0);
     } else {
         ESP_LOGI("UROS", "Pose publisher created successfully");
     }
 
+    // Initialize goal_pose subscription message properly
+    geometry_msgs__msg__PoseStamped goal_pose;
+    geometry_msgs__msg__PoseStamped__init(&goal_pose);
+    // Allocate buffer for frame_id
+    goal_pose.header.frame_id.data = (char*)malloc(32);
+    goal_pose.header.frame_id.capacity = 32;
+    goal_pose.header.frame_id.size = 0;
+    
+    rcl_subscription_t goal_pose_sub;
+    rclc_subscription_init_default(
+        &goal_pose_sub,
+        &node,
+        ROSIDL_GET_MSG_TYPE_SUPPORT(geometry_msgs, msg, PoseStamped),
+        "goal_pose");
+    rclc_executor_add_subscription(
+        &executor,
+        &goal_pose_sub,
+        &goal_pose,
+        &goal_pose_callback,
+        ON_NEW_DATA);
+    
+    // Initialize cmd_vel subscription message
     geometry_msgs__msg__Twist cmdVel;
+    geometry_msgs__msg__Twist__init(&cmdVel);
+    
     rcl_subscription_t cmd_vel_sub;
     rcl_ret_t rc1 = rclc_subscription_init_default(
         &cmd_vel_sub,
@@ -96,7 +136,6 @@ void micro_ros_task(void * arg)
     } else {
         ESP_LOGI("UROS", "Twist subscribe inited successfully");
     }
-
     rcl_ret_t rc2 = rclc_executor_add_subscription(
         &executor,
         &cmd_vel_sub,
@@ -115,7 +154,7 @@ void micro_ros_task(void * arg)
         
         // Watchdog: Check if cmd_vel timeout occurred
         TickType_t currentTime = xTaskGetTickCount();
-        if ((currentTime - lastCmdVelTime) > CMD_VEL_TIMEOUT) {
+        if (robotState == WaitingForGoal && (currentTime - lastCmdVelTime) > CMD_VEL_TIMEOUT) {
             // Timeout occurred - reset velocity to zero
             robot.setVelocity(0.0f, 0.0f);
             ESP_LOGI("WATCHDOG", "cmd_vel timeout - velocity reset to zero");
@@ -176,6 +215,6 @@ extern "C" void app_main()
         printf("=====================================================================\n");
         printHeapMemoryUsage();
         printStackMemoryUsage();
-        vTaskDelay(1000/portTICK_PERIOD_MS);
+        vTaskDelay(5000/portTICK_PERIOD_MS);
     }
 }

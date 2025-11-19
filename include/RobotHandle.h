@@ -32,6 +32,7 @@ public:
         }
     
     void setVelocity(float vx, float w){
+        ESP_LOGI("ROBOTHANDLE", "Velocity set to vx: %.2f m/s, w: %.2f rad/s", vx, w);
         float vLeft = vx + w * m_wheelsDistance / 2;
         float vRight = vx - w * m_wheelsDistance / 2;
         m_leftWheel->pid->setSetPoint((60 * vLeft) / (m_wheelsRadius * 2 * PI));
