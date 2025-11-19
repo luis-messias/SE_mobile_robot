@@ -23,7 +23,6 @@ services:
     working_dir: $PWD
     command: idf.py build
 
-
   flash:
     build: 
       context: .
@@ -35,3 +34,15 @@ services:
     stdin_open: true
     working_dir: $PWD
     command: idf.py flash
+  
+  monitor:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: esp-idf-container-monitor
+    volumes:
+      - $PWD:$PWD
+    tty: true
+    stdin_open: true
+    working_dir: $PWD
+    command: idf.py monitor

@@ -1,0 +1,19 @@
+dependencies:
+  idf:
+    source:
+      type: idf
+    version: 5.5.1
+  micro_ros_espidf_component:
+    component_hash: 
+      947496c535454e1b5ed0dd814ec1499bf376fdbd0d856f173573c85aafd4a61c
+    dependencies: []
+    source:
+      git: https://github.com/micro-ROS/micro_ros_espidf_component.git
+      path: .
+      type: git
+    version: feecdb125d15ee3326b2a07a1a7ca4063d219f6d
+direct_dependencies:
+- micro_ros_espidf_component
+manifest_hash: 53ac28f7dee25596a1d3d66fe564a9f14ab74dab0ac1393b7d6da7c5bd27c5e4
+target: esp32
+version: 2.0.0
