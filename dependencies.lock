@@ -5,15 +5,15 @@ dependencies:
     version: 5.5.1
   micro_ros_espidf_component:
     component_hash: 
-      947496c535454e1b5ed0dd814ec1499bf376fdbd0d856f173573c85aafd4a61c
+      09dcf7fbca8e2f85613ba51f782a978a46736662fe28bee1feed0f089280eee9
     dependencies: []
     source:
-      git: https://github.com/micro-ROS/micro_ros_espidf_component.git
+      git: https://github.com/luis-messias/micro_ros_espidf_component
       path: .
       type: git
-    version: feecdb125d15ee3326b2a07a1a7ca4063d219f6d
+    version: 0e9c2a8434da96cc7d4aeaee4e13876100cf1245
 direct_dependencies:
 - micro_ros_espidf_component
-manifest_hash: 53ac28f7dee25596a1d3d66fe564a9f14ab74dab0ac1393b7d6da7c5bd27c5e4
+manifest_hash: 5df400e7c76d44d1cbea6f10123975b4b88bad1482b5f38bb6dc9018cf03ccdf
 target: esp32
 version: 2.0.0

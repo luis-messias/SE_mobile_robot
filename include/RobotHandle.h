@@ -1,17 +1,21 @@
 #ifndef ROBOTHANDLE_H
 #define ROBOTHANDLE_H
 
+#include <freertos/FreeRTOS.h>
+#include <freertos/semphr.h>
 #include <EngineDriver.h>
 #include <EncoderDriver.h>
+#include <PID.h>
 #include <utility>
 
 #define PI 3.14159265359
 
-typedef struct {
-    EngineDriver* engineDriver;
-    EncoderDriver* encoderDriver;
-    PID* pid;
-} wheelHandle;
+enum RobotState {
+    ROBOT_IDLE = 0,
+    ROBOT_RPM_COMMAND_MODE = 1,
+    ROBOT_VELOCITY_COMMAND_MODE = 2,
+    ROBOT_FIND_GOAL_MODE = 3
+};
 
 typedef struct {
     float vx;
@@ -21,59 +25,55 @@ typedef struct {
     float alpha;
 } Odometry;
 
-class robotHandle{
+typedef struct {
+    float rpmLeft;
+    float rpmRight;
+    float rmpLeftSetPoint;
+    float rpmRightSetPoint;
+    float outPIDLeft;
+    float outPIDRight;
+} pidStatus;
+
+
+class RobotHandle{
 public:
-    robotHandle(wheelHandle* leftWheel, wheelHandle* rightWheel, float wheelsRadius, float wheelsDistance) : 
-        m_leftWheel(leftWheel),
-        m_rightWheel(rightWheel),
-        m_wheelsRadius(wheelsRadius),
-        m_wheelsDistance(wheelsDistance) {
-            m_odometry = {0,0,0,0,0};
-        }
+    RobotHandle();
+
+    void setVelocity(float vx, float w);
+    void setRMP(float rpmLeft, float rpmRight);
+    void setPIDGains(float k, float ki, float kd);
+    void stop();
     
-    void setVelocity(float vx, float w){
-        ESP_LOGI("ROBOTHANDLE", "Velocity set to vx: %.2f m/s, w: %.2f rad/s", vx, w);
-        float vLeft = vx + w * m_wheelsDistance / 2;
-        float vRight = vx - w * m_wheelsDistance / 2;
-        m_leftWheel->pid->setSetPoint((60 * vLeft) / (m_wheelsRadius * 2 * PI));
-        m_rightWheel->pid->setSetPoint((60 * vRight) / (m_wheelsRadius * 2 * PI));
-    }
+    Odometry getOdometry();
 
-    void updateOdometry(){
-        auto [vx, w] = getVelocity();
-        float dx = 0;
-        float dy = 0;
-        float dAlpha = 0;
-
-        TickType_t xCurrentTick = xTaskGetTickCount();
-        if(xCurrentTick != xLastUpdateTick){
-            float dt = ((float)xCurrentTick - xLastUpdateTick)/configTICK_RATE_HZ;
-            float ds = vx * dt;
-
-            dAlpha = w * dt;
-            dx = std::cos(m_odometry.alpha) * ds;
-            dy = std::sin(m_odometry.alpha) * ds;   
-
-            xLastUpdateTick = xCurrentTick;
-        }
-        m_odometry = {vx, w, m_odometry.x + dx, m_odometry.y + dy, m_odometry.alpha + dAlpha};
-    }
-
-    Odometry getOdometry(){return m_odometry;}
+    void updateWheelsPID();
+    pidStatus getPIDStatus();
 
 private:
-    std::pair<float, float> getVelocity(){
-        float vLeft = m_leftWheel->encoderDriver->getRPM() * 2 * PI * m_wheelsRadius / 60;
-        float VRight = m_rightWheel->encoderDriver->getRPM() * 2 * PI * m_wheelsRadius/ 60;
-        return {(vLeft + VRight) / 2, (vLeft - VRight) / m_wheelsDistance};
-    }
+    std::pair<float, float> getVelocity();
+    void updateOdometry();
 
-    wheelHandle* m_leftWheel;
-    wheelHandle* m_rightWheel;
+    EngineDriver* engineDriverLeft;
+    EngineDriver* engineDriverRight;
+    EncoderDriver* encoderDriverLeft;
+    EncoderDriver* encoderDriverRight;
+    PID* pidLeft;
+    PID* pidRight;
+
     float m_wheelsRadius;
     float m_wheelsDistance;
+
     Odometry m_odometry;
     TickType_t xLastUpdateTick;
+
+    float m_rpmLeft;
+    float m_rpmRight;
+    float m_rmpLeftSetPoint;
+    float m_rpmRightSetPoint;
+    float m_outPIDLeft;
+    float m_outPIDRight;
+
+    RobotState m_robotState;
 };
 
 #endif

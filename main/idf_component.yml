@@ -1,5 +1,5 @@
 dependencies:
   # Define a dependency from a Git repository
   micro_ros_espidf_component:
-    git: https://github.com/micro-ROS/micro_ros_espidf_component.git
+    git: https://github.com/luis-messias/micro_ros_espidf_component
     version: jazzy
