@@ -7,18 +7,18 @@
 class PID {
 public:
 
-  PID(float k, float ki, float kd);
+    PID(float k, float ki, float kd);
 
-  float getOut(float y, float dt);
-  void setSetPoint(float ref);
-  void setGains(float k, float ki, float kd);
+    float getOut(float y, float dt);
+    void setSetPoint(float ref);
+    void setGains(float k, float ki, float kd);
 
 private:
-  float m_k, m_ki, m_kd; 
-  float m_setPoint;
-  float m_intError;
-  float m_lastError;
-  SemaphoreHandle_t xSemaphore;
+    float m_k, m_ki, m_kd;
+    float m_setPoint;
+    float m_intError;
+    float m_lastError;
+    SemaphoreHandle_t xSemaphore;
 };
 
 #endif

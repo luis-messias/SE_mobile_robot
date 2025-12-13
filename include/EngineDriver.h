@@ -10,16 +10,16 @@
 class EngineDriver {
 public:
 
-  EngineDriver(std::pair<int, int> gpios, ledc_timer_t timer,
-               std::pair<ledc_channel_t, ledc_channel_t> channels,
-               float deadZone);
-  void setOutput(float percentage);
+    EngineDriver(std::pair<int, int> gpios, ledc_timer_t timer,
+                 std::pair<ledc_channel_t, ledc_channel_t> channels,
+                 float deadZone);
+    void setOutput(float percentage);
 
 private:
-  std::pair<ledc_channel_t, ledc_channel_t>
-      m_channels;
-  float m_deadZone;
-  SemaphoreHandle_t xSemaphore;
+    std::pair<ledc_channel_t, ledc_channel_t>
+        m_channels;
+    float m_deadZone;
+    SemaphoreHandle_t xSemaphore;
 };
 
 #endif

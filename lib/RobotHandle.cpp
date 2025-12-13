@@ -65,7 +65,7 @@ void RobotHandle::stop(){
         pidRight->setSetPoint(m_rpmRightSetPoint);
         xSemaphoreGive(xSemaphore);
     }
-    }
+}
 
 void RobotHandle::updateOdometry(){
     auto [vx, w] = getVelocity();

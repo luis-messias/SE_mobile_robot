@@ -8,22 +8,22 @@
 
 class EncoderDriver{
 public:
-  EncoderDriver(int portA, int portB, float encoderResolution);
-  float getRPM();
+    EncoderDriver(int portA, int portB, float encoderResolution);
+    float getRPM();
 
 private:
-  float getRotations();
-  int64_t getCount();
+    float getRotations();
+    int64_t getCount();
 
-  pcnt_unit_handle_t pcnt_unit;
-  float lastRotation = 0;
-  float lastRPM;
-  TickType_t xLastTick;
-  float m_encoderResolution;
+    pcnt_unit_handle_t pcnt_unit;
+    float lastRotation = 0;
+    float lastRPM;
+    TickType_t xLastTick;
+    float m_encoderResolution;
 
-  int64_t accumulated_count = 0;
-  int last_hardware_count = 0;
-  SemaphoreHandle_t xSemaphore;
+    int64_t accumulated_count = 0;
+    int last_hardware_count = 0;
+    SemaphoreHandle_t xSemaphore;
 };
 
 #endif

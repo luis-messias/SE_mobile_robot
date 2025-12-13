@@ -35,7 +35,7 @@ public:
     void setVelocity(float vx, float w);
     void setPIDGains(float k, float ki, float kd);
     void stop();
-    
+
     Odometry getOdometry();
 
     void updateWheelsPID();
