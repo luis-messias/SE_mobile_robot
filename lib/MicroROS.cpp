@@ -170,7 +170,7 @@ bool MicroROS::initialize() {
     rcl_publisher_t temp_rpm_left_pub;
     rcl_ret_t rpm_left_pub_ret = rclc_publisher_init_default(
         &temp_rpm_left_pub, &node,
-        ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float32), "pid/rpm_left");
+        ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float32), "left_wheel/rpm");
     if (rpm_left_pub_ret != RCL_RET_OK) {
         ESP_LOGE("MICROROS", "Failed to create RPM left publisher: %d", rpm_left_pub_ret);
         return false;
@@ -182,7 +182,7 @@ bool MicroROS::initialize() {
     rcl_publisher_t temp_rpm_right_pub;
     rcl_ret_t rpm_right_pub_ret = rclc_publisher_init_default(
         &temp_rpm_right_pub, &node,
-        ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float32), "pid/rpm_right");
+        ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float32), "right_wheel/rpm");
     if (rpm_right_pub_ret != RCL_RET_OK) {
         ESP_LOGE("MICROROS", "Failed to create RPM right publisher: %d", rpm_right_pub_ret);
         return false;
@@ -194,7 +194,7 @@ bool MicroROS::initialize() {
     rcl_publisher_t temp_rpm_left_sp_pub;
     rcl_ret_t rpm_left_sp_pub_ret = rclc_publisher_init_default(
         &temp_rpm_left_sp_pub, &node,
-        ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float32), "pid/rpm_left_setpoint");
+        ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float32), "left_wheel/setpoint");
     if (rpm_left_sp_pub_ret != RCL_RET_OK) {
         ESP_LOGE("MICROROS", "Failed to create RPM left setpoint publisher: %d", rpm_left_sp_pub_ret);
         return false;
@@ -206,7 +206,7 @@ bool MicroROS::initialize() {
     rcl_publisher_t temp_rpm_right_sp_pub;
     rcl_ret_t rpm_right_sp_pub_ret = rclc_publisher_init_default(
         &temp_rpm_right_sp_pub, &node,
-        ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float32), "pid/rpm_right_setpoint");
+        ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float32), "right_wheel/setpoint");
     if (rpm_right_sp_pub_ret != RCL_RET_OK) {
         ESP_LOGE("MICROROS", "Failed to create RPM right setpoint publisher: %d", rpm_right_sp_pub_ret);
         return false;
@@ -218,7 +218,7 @@ bool MicroROS::initialize() {
     rcl_publisher_t temp_pid_left_pub;
     rcl_ret_t pid_left_pub_ret = rclc_publisher_init_default(
         &temp_pid_left_pub, &node,
-        ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float32), "pid/pid_left_output");
+        ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float32), "left_wheel/output");
     if (pid_left_pub_ret != RCL_RET_OK) {
         ESP_LOGE("MICROROS", "Failed to create PID left output publisher: %d", pid_left_pub_ret);
         return false;
@@ -230,7 +230,7 @@ bool MicroROS::initialize() {
     rcl_publisher_t temp_pid_right_pub;
     rcl_ret_t pid_right_pub_ret = rclc_publisher_init_default(
         &temp_pid_right_pub, &node,
-        ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float32), "pid/pid_right_output");
+        ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float32), "right_wheel/output");
     if (pid_right_pub_ret != RCL_RET_OK) {
         ESP_LOGE("MICROROS", "Failed to create PID right output publisher: %d", pid_right_pub_ret);
         return false;
@@ -331,14 +331,14 @@ void MicroROS::publishPIDStatus() {
     }
 
     // Publish PID left output
-    pid_left_output_msg.data = status.outPIDLeft;
+    pid_left_output_msg.data = status.outPIDLeft * 100.0f;
     ret = rcl_publish(&pid_left_output_publisher, &pid_left_output_msg, NULL);
     if (ret != RCL_RET_OK) {
         ESP_LOGW("MICROROS", "Failed to publish PID left output: %d", ret);
     }
 
     // Publish PID right output
-    pid_right_output_msg.data = status.outPIDRight;
+    pid_right_output_msg.data = status.outPIDRight * 100.0f;
     ret = rcl_publish(&pid_right_output_publisher, &pid_right_output_msg, NULL);
     if (ret != RCL_RET_OK) {
         ESP_LOGW("MICROROS", "Failed to publish PID right output: %d", ret);
