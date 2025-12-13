@@ -64,6 +64,7 @@ private:
     float m_rpmRightSetPoint;
     float m_outPIDLeft;
     float m_outPIDRight;
+    SemaphoreHandle_t xSemaphore;
 };
 
 #endif
