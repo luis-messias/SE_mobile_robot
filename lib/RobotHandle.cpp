@@ -8,6 +8,7 @@ RobotHandle::RobotHandle() {
     xSemaphore = xSemaphoreCreateMutex();
     if (xSemaphore == NULL) {
         ESP_LOGE("ROBOTHANDLE", "Failed to create mutex semaphore!");
+        return;
     }
 
     m_wheelsRadius = WHEEL_RADIUS;
@@ -29,8 +30,14 @@ RobotHandle::RobotHandle() {
 
 void RobotHandle::setVelocity(float vx, float w){
     if (xSemaphoreTake(xSemaphore, portMAX_DELAY) == pdTRUE) {
-        if (fabs(vx) > 2.0f || fabs(w) > 10.0f) {
-            ESP_LOGW("ROBOTHANDLE", "Velocity command exceeds limits: vx=%.2f m/s, w=%.2f rad/s", vx, w);
+        // Clamp velocities to safe limits
+        if (fabs(vx) > MAX_LINEAR_VELOCITY) {
+            vx = (vx > 0) ? MAX_LINEAR_VELOCITY : -MAX_LINEAR_VELOCITY;
+            ESP_LOGW("ROBOTHANDLE", "Linear velocity clamped to limit: %.2f m/s", vx);
+        }
+        if (fabs(w) > MAX_ANGULAR_VELOCITY) {
+            w = (w > 0) ? MAX_ANGULAR_VELOCITY : -MAX_ANGULAR_VELOCITY;
+            ESP_LOGW("ROBOTHANDLE", "Angular velocity clamped to limit: %.2f rad/s", w);
         }
 
         ESP_LOGI("ROBOTHANDLE", "Velocity set to vx: %.2f m/s, w: %.2f rad/s", vx, w);
@@ -38,10 +45,10 @@ void RobotHandle::setVelocity(float vx, float w){
         float vRight = vx - w * m_wheelsDistance / 2;
 
         // Convert linear velocity (m/s) to RPM for PID controllers
-        m_rmpLeftSetPoint = (60 * vLeft) / (m_wheelsRadius * 2 * PI);
+        m_rpmLeftSetPoint = (60 * vLeft) / (m_wheelsRadius * 2 * PI);
         m_rpmRightSetPoint = (60 * vRight) / (m_wheelsRadius * 2 * PI);
 
-        pidLeft->setSetPoint(m_rmpLeftSetPoint);
+        pidLeft->setSetPoint(m_rpmLeftSetPoint);
         pidRight->setSetPoint(m_rpmRightSetPoint);
         xSemaphoreGive(xSemaphore);
     }
@@ -58,10 +65,10 @@ void RobotHandle::setPIDGains(float k, float ki, float kd){
 
 void RobotHandle::stop(){
     if (xSemaphoreTake(xSemaphore, portMAX_DELAY) == pdTRUE) {
-        m_rmpLeftSetPoint = 0;
+        m_rpmLeftSetPoint = 0;
         m_rpmRightSetPoint = 0;
 
-        pidLeft->setSetPoint(m_rmpLeftSetPoint);
+        pidLeft->setSetPoint(m_rpmLeftSetPoint);
         pidRight->setSetPoint(m_rpmRightSetPoint);
         xSemaphoreGive(xSemaphore);
     }
@@ -126,12 +133,12 @@ void RobotHandle::updateWheelsPID(){
     }
 }
 
-pidStatus RobotHandle::getPIDStatus(){
-    pidStatus status;
+PidStatus RobotHandle::getPIDStatus(){
+    PidStatus status;
     if (xSemaphoreTake(xSemaphore, portMAX_DELAY) == pdTRUE) {
         status = {m_rpmLeft,
             m_rpmRight,
-            m_rmpLeftSetPoint,
+            m_rpmLeftSetPoint,
             m_rpmRightSetPoint,
             m_outPIDLeft,
             m_outPIDRight};

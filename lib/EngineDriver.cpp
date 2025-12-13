@@ -5,9 +5,21 @@ EngineDriver::EngineDriver(std::pair<int, int> gpios, ledc_timer_t timer,
                              std::pair<ledc_channel_t, ledc_channel_t> channels,
                              float deadZone)
     : m_channels(channels), m_deadZone(deadZone) {
+
+    // Input validation
+    if (gpios.first < 0 || gpios.second < 0) {
+        ESP_LOGE("ENGINEDRIVER", "Invalid GPIO pins: %d, %d", gpios.first, gpios.second);
+        return;
+    }
+    if (deadZone < 0.0f || deadZone > 1.0f) {
+        ESP_LOGE("ENGINEDRIVER", "Invalid dead zone: %.2f (must be 0.0-1.0)", deadZone);
+        m_deadZone = 0.0f; // Set safe default
+    }
+
     xSemaphore = xSemaphoreCreateMutex();
     if (xSemaphore == NULL) {
         ESP_LOGE("ENGINEDRIVER", "Failed to create mutex semaphore!");
+        return;
     }
 
     ledc_timer_config_t timer_conf = {

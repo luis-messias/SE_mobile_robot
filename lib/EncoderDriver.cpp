@@ -6,12 +6,23 @@
 #define PI 3.14159265359
 
 EncoderDriver::EncoderDriver(int portA, int portB, float encoderResolution) {
-    xSemaphore = xSemaphoreCreateMutex();
-    if (xSemaphore == NULL) {
-        ESP_LOGE("PID", "Failed to create mutex semaphore!");
+    // Input validation
+    if (portA < 0 || portB < 0) {
+        ESP_LOGE("ENCODERDRIVER", "Invalid GPIO pins: portA=%d, portB=%d", portA, portB);
+        return;
+    }
+    if (encoderResolution <= 0.0f) {
+        ESP_LOGE("ENCODERDRIVER", "Invalid encoder resolution: %.2f (must be > 0)", encoderResolution);
+        m_encoderResolution = 1.0f; // Set safe default
+    } else {
+        m_encoderResolution = encoderResolution;
     }
 
-    m_encoderResolution = encoderResolution;
+    xSemaphore = xSemaphoreCreateMutex();
+    if (xSemaphore == NULL) {
+        ESP_LOGE("ENCODERDRIVER", "Failed to create mutex semaphore!");
+        return;
+    }
 
     pcnt_unit_config_t unit_config = {
         .low_limit = BDC_ENCODER_PCNT_LOW_LIMIT,

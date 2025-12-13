@@ -300,7 +300,7 @@ void MicroROS::publishPose() {
 void MicroROS::publishPIDStatus() {
     if (!initialized) return;
 
-    pidStatus status = robot_handle->getPIDStatus();
+    PidStatus status = robot_handle->getPIDStatus();
 
     // Publish RPM left
     rpm_left_msg.data = status.rpmLeft;
@@ -317,7 +317,7 @@ void MicroROS::publishPIDStatus() {
     }
 
     // Publish RPM left setpoint
-    rpm_left_setpoint_msg.data = status.rmpLeftSetPoint;
+    rpm_left_setpoint_msg.data = status.rpmLeftSetPoint;
     ret = rcl_publish(&rpm_left_setpoint_publisher, &rpm_left_setpoint_msg, NULL);
     if (ret != RCL_RET_OK) {
         ESP_LOGW("MICROROS", "Failed to publish RPM left setpoint: %d", ret);

@@ -12,15 +12,67 @@
 #include <freertos/FreeRTOS.h>
 #include <RobotHandle.h>
 
+/**
+ * @brief Micro-ROS interface for robot control and monitoring
+ *
+ * This class provides ROS2 communication capabilities for the mobile robot,
+ * including velocity command subscription, odometry publishing, and PID
+ * status monitoring. It uses micro-ROS for embedded ROS2 functionality.
+ */
 class MicroROS {
 public:
-
+    /**
+     * @brief Constructor - initializes MicroROS with robot interface
+     * @param robot Pointer to RobotHandle for accessing robot state and control
+     */
     MicroROS(RobotHandle* robot);
+
+    /**
+     * @brief Destructor - cleans up ROS2 resources
+     */
     ~MicroROS();
+
+    /**
+     * @brief Initialize ROS2 node, publishers, and subscribers
+     * @return true if initialization successful, false otherwise
+     *
+     * This method creates the ROS2 node, sets up all publishers and subscribers,
+     * and establishes network connection to the ROS2 agent.
+     */
     bool initialize();
+
+    /**
+     * @brief Process ROS2 communication for specified timeout
+     * @param timeout_ms Maximum time to spend processing messages (default: 100ms)
+     *
+     * This method handles incoming ROS2 messages and executes callbacks.
+     * It should be called regularly to maintain ROS2 communication.
+     */
     void spinOnce(int timeout_ms = 100);
+
+    /**
+     * @brief Publish current robot pose (odometry)
+     *
+     * Publishes the robot's current position, orientation, and velocity
+     * as a PoseStamped message on the "Pose" topic.
+     */
     void publishPose();
+
+    /**
+     * @brief Publish PID controller status and wheel information
+     *
+     * Publishes RPM measurements, setpoints, and PID outputs for both wheels
+     * on individual topics for monitoring and debugging.
+     */
     void publishPIDStatus();
+
+    /**
+     * @brief Check for command velocity timeout and stop robot if needed
+     * @param timeout_ticks Maximum allowed ticks since last velocity command
+     *
+     * This safety feature automatically stops the robot if no velocity commands
+     * are received within the specified timeout period.
+     */
     void checkCmdVelTimeout(TickType_t timeout_ticks);
 
 private:

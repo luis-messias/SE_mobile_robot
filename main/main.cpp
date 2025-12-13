@@ -35,7 +35,7 @@ void micro_ros_task(void *arg) {
     while (1) {
         loop_count++;
         if (loop_count % 1000 == 0) {
-            ESP_LOGI("MICROROS", "ROS task running, loop #%d", loop_count);
+            ESP_LOGD("MICROROS", "ROS task running, loop #%d", loop_count);
         }
 
         // Handle ROS2 communication

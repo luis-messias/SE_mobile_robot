@@ -4,6 +4,11 @@
 #include <esp_log.h>
 
 PID::PID(float k, float ki, float kd) : m_k(k), m_ki(ki), m_kd(kd) {
+    // Input validation
+    if (k < 0.0f || ki < 0.0f || kd < 0.0f) {
+        ESP_LOGW("PID", "Negative PID gains detected: k=%.4f, ki=%.4f, kd=%.4f", k, ki, kd);
+    }
+
     xSemaphore = xSemaphoreCreateMutex();
     if (xSemaphore == NULL) {
         ESP_LOGE("PID", "Failed to create mutex semaphore!");
