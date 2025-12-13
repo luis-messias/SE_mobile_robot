@@ -7,7 +7,6 @@
 RobotHandle::RobotHandle() {
         m_wheelsRadius = WHEEL_RADIUS;
         m_wheelsDistance = WHEEL_DISTANCE;
-        m_robotState = RobotState::ROBOT_IDLE;
         engineDriverLeft =
             new EngineDriver({12, 4}, LEDC_TIMER_0,
                 std::pair{LEDC_CHANNEL_0, LEDC_CHANNEL_1}, ENGINE_DEAD_ZONE);
@@ -23,36 +22,20 @@ RobotHandle::RobotHandle() {
     }
 
 void RobotHandle::setVelocity(float vx, float w){
-    if(m_robotState <= RobotState::ROBOT_VELOCITY_COMMAND_MODE){
-        m_robotState = RobotState::ROBOT_VELOCITY_COMMAND_MODE;
-        if (fabs(vx) > 2.0f || fabs(w) > 10.0f) {
-            ESP_LOGW("ROBOTHANDLE", "Velocity command exceeds limits: vx=%.2f m/s, w=%.2f rad/s", vx, w);
-        }
-
-        ESP_LOGI("ROBOTHANDLE", "Velocity set to vx: %.2f m/s, w: %.2f rad/s", vx, w);
-        float vLeft = vx + w * m_wheelsDistance / 2;
-        float vRight = vx - w * m_wheelsDistance / 2;
-
-        // Convert linear velocity (m/s) to RPM for PID controllers
-        m_rmpLeftSetPoint = (60 * vLeft) / (m_wheelsRadius * 2 * PI);
-        m_rpmRightSetPoint = (60 * vRight) / (m_wheelsRadius * 2 * PI);
-
-        pidLeft->setSetPoint(m_rmpLeftSetPoint);
-        pidRight->setSetPoint(m_rpmRightSetPoint);
+    if (fabs(vx) > 2.0f || fabs(w) > 10.0f) {
+        ESP_LOGW("ROBOTHANDLE", "Velocity command exceeds limits: vx=%.2f m/s, w=%.2f rad/s", vx, w);
     }
-}
 
-void RobotHandle::setRMP(float rpmLeft, float rpmRight){
-    if(m_robotState <= RobotState::ROBOT_RPM_COMMAND_MODE){
-        m_robotState = RobotState::ROBOT_RPM_COMMAND_MODE;
-        ESP_LOGI("ROBOTHANDLE", "RPM set to: %.2f and %.2f", rpmLeft, rpmRight);
-        
-        m_rmpLeftSetPoint = rpmLeft;
-        m_rpmRightSetPoint = rpmRight;
+    ESP_LOGI("ROBOTHANDLE", "Velocity set to vx: %.2f m/s, w: %.2f rad/s", vx, w);
+    float vLeft = vx + w * m_wheelsDistance / 2;
+    float vRight = vx - w * m_wheelsDistance / 2;
 
-        pidLeft->setSetPoint(m_rmpLeftSetPoint);
-        pidRight->setSetPoint(m_rpmRightSetPoint);
-    }
+    // Convert linear velocity (m/s) to RPM for PID controllers
+    m_rmpLeftSetPoint = (60 * vLeft) / (m_wheelsRadius * 2 * PI);
+    m_rpmRightSetPoint = (60 * vRight) / (m_wheelsRadius * 2 * PI);
+
+    pidLeft->setSetPoint(m_rmpLeftSetPoint);
+    pidRight->setSetPoint(m_rpmRightSetPoint);
 }
 
 void RobotHandle::setPIDGains(float k, float ki, float kd){
@@ -62,8 +45,6 @@ void RobotHandle::setPIDGains(float k, float ki, float kd){
 }
 
 void RobotHandle::stop(){
-    m_robotState = RobotState::ROBOT_IDLE;
-
     m_rmpLeftSetPoint = 0;
     m_rpmRightSetPoint = 0;
 

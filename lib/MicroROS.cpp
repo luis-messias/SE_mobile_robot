@@ -62,11 +62,6 @@ MicroROS::~MicroROS() {
             ESP_LOGW("MICROROS", "Failed to fini cmd_vel subscriber: %d", ret);
         }
 
-        ret = rcl_subscription_fini(&goal_pose_subscriber, &node);
-        if (ret != RCL_RET_OK) {
-            ESP_LOGW("MICROROS", "Failed to fini goal_pose subscriber: %d", ret);
-        }
-
         ret = rclc_executor_fini(&executor);
         if (ret != RCL_RET_OK) {
             ESP_LOGW("MICROROS", "Failed to fini executor: %d", ret);
@@ -85,7 +80,6 @@ MicroROS::~MicroROS() {
         // Clean up messages
         geometry_msgs__msg__PoseStamped__fini(&pose_msg);
         geometry_msgs__msg__Twist__fini(&cmd_vel_msg);
-        geometry_msgs__msg__PoseStamped__fini(&goal_pose_msg);
         std_msgs__msg__Float32__fini(&rpm_left_msg);
         std_msgs__msg__Float32__fini(&rpm_right_msg);
         std_msgs__msg__Float32__fini(&rpm_left_setpoint_msg);
@@ -246,31 +240,6 @@ bool MicroROS::initialize() {
 
     ESP_LOGI("MICROROS", "PID status publishers created successfully");
 
-    // Initialize goal_pose subscriber
-    geometry_msgs__msg__PoseStamped__init(&goal_pose_msg);
-    goal_pose_msg.header.frame_id.data = frame_id_buffer;
-    goal_pose_msg.header.frame_id.capacity = 32;
-    goal_pose_msg.header.frame_id.size = 0;
-
-    rcl_subscription_t temp_goal_sub;
-    rcl_ret_t goal_sub_ret = rclc_subscription_init_default(
-        &temp_goal_sub, &node,
-        ROSIDL_GET_MSG_TYPE_SUPPORT(geometry_msgs, msg, PoseStamped), "goal_pose");
-    if (goal_sub_ret != RCL_RET_OK) {
-        ESP_LOGE("MICROROS", "Failed to create goal_pose subscriber: %d", goal_sub_ret);
-        return false;
-    }
-    goal_pose_subscriber = temp_goal_sub;
-    ESP_LOGD("MICROROS", "Goal pose subscriber created successfully");
-
-    rcl_ret_t goal_add_ret = rclc_executor_add_subscription(&executor, &goal_pose_subscriber, &goal_pose_msg,
-                                  &MicroROS::goalPoseCallback, ON_NEW_DATA);
-    if (goal_add_ret != RCL_RET_OK) {
-        ESP_LOGE("MICROROS", "Failed to add goal_pose subscriber to executor: %d", goal_add_ret);
-        return false;
-    }
-    ESP_LOGD("MICROROS", "Goal pose subscriber added to executor successfully");
-
     // Initialize cmd_vel subscriber
     geometry_msgs__msg__Twist__init(&cmd_vel_msg);
 
@@ -381,7 +350,7 @@ void MicroROS::checkCmdVelTimeout(TickType_t timeout_ticks) {
 
     TickType_t current_time = xTaskGetTickCount();
     if (getting_cmd_vel_msg && (current_time - last_cmd_vel_time) > timeout_ticks) {
-        robot_handle->setVelocity(0.0f, 0.0f);
+        robot_handle->stop();
         getting_cmd_vel_msg = false; 
         ESP_LOGI("MICROROS", "cmd_vel timeout - velocity reset to zero");       
     }
@@ -394,11 +363,4 @@ void MicroROS::cmdVelCallback(const void* msgin) {
     instance->robot_handle->setVelocity(cmd_vel->linear.x, cmd_vel->angular.z);
     instance->last_cmd_vel_time = xTaskGetTickCount();
     instance->getting_cmd_vel_msg = true;
-}
-
-void MicroROS::goalPoseCallback(const void* msgin) {
-    const geometry_msgs__msg__PoseStamped* goal_pose = (const geometry_msgs__msg__PoseStamped*)msgin;
-    ESP_LOGI("MICROROS", "Received new goal pose: x=%.2f, y=%.2f",
-             goal_pose->pose.position.x, goal_pose->pose.position.y);
-    // TODO: Implement goal pose handling logic
 }

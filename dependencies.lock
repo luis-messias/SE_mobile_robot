@@ -5,13 +5,13 @@ dependencies:
     version: 5.5.1
   micro_ros_espidf_component:
     component_hash: 
-      09dcf7fbca8e2f85613ba51f782a978a46736662fe28bee1feed0f089280eee9
+      e2112c7852d06cb93cada3bda266ea560cd1c1d005185f7aac2a1f3568f81908
     dependencies: []
     source:
       git: https://github.com/luis-messias/micro_ros_espidf_component
       path: .
       type: git
-    version: 0e9c2a8434da96cc7d4aeaee4e13876100cf1245
+    version: bc8b5dae8479ba29d16e00b2922ea0604290a645
 direct_dependencies:
 - micro_ros_espidf_component
 manifest_hash: 5df400e7c76d44d1cbea6f10123975b4b88bad1482b5f38bb6dc9018cf03ccdf

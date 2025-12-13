@@ -10,13 +10,6 @@
 
 #define PI 3.14159265359
 
-enum RobotState {
-    ROBOT_IDLE = 0,
-    ROBOT_RPM_COMMAND_MODE = 1,
-    ROBOT_VELOCITY_COMMAND_MODE = 2,
-    ROBOT_FIND_GOAL_MODE = 3
-};
-
 typedef struct {
     float vx;
     float w;
@@ -40,7 +33,6 @@ public:
     RobotHandle();
 
     void setVelocity(float vx, float w);
-    void setRMP(float rpmLeft, float rpmRight);
     void setPIDGains(float k, float ki, float kd);
     void stop();
     
@@ -72,8 +64,6 @@ private:
     float m_rpmRightSetPoint;
     float m_outPIDLeft;
     float m_outPIDRight;
-
-    RobotState m_robotState;
 };
 
 #endif

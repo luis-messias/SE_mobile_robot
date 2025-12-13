@@ -49,9 +49,7 @@ private:
 
     // Subscribers
     rcl_subscription_t cmd_vel_subscriber;
-    rcl_subscription_t goal_pose_subscriber;
     geometry_msgs__msg__Twist cmd_vel_msg;
-    geometry_msgs__msg__PoseStamped goal_pose_msg;
 
     // Robot reference
     RobotHandle* robot_handle;
@@ -63,7 +61,6 @@ private:
 
     // Callback functions (static to work with C API)
     static void cmdVelCallback(const void* msgin);
-    static void goalPoseCallback(const void* msgin);
 
     // Static reference to instance for callbacks
     static MicroROS* instance;
