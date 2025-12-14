@@ -5,6 +5,7 @@
 #include "freertos/task.h"
 #include "sdkconfig.h"
 #include <freertos/semphr.h>
+#include <driver/gpio.h>
 
 // PID timing monitoring
 static uint32_t pid_call_count = 0;
@@ -46,7 +47,7 @@ void micro_ros_task(void *arg) {
 
         // Publish
         microROS->publishPose();
-        microROS->publishPIDStatus();
+        // microROS->publishPIDStatus();
 
         vTaskDelay(MAIN_LOOP_DELAY_MS / portTICK_PERIOD_MS);
     }
@@ -84,6 +85,16 @@ extern "C" void app_main() {
     }
     ESP_LOGI("MAIN", "MicroROS initialized successfully");
 
+    // Configure GPIO 2 (D2) as output for status LED
+    gpio_config_t io_conf = {};
+    io_conf.intr_type = GPIO_INTR_DISABLE;
+    io_conf.mode = GPIO_MODE_OUTPUT;
+    io_conf.pin_bit_mask = (1ULL << GPIO_NUM_2);
+    io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
+    io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
+    ESP_ERROR_CHECK(gpio_config(&io_conf));
+
+
     // Initialize PID control timer
     const esp_timer_create_args_t pid_timer_args = {
         .callback = &pidEnginesTimerCallback,
@@ -100,6 +111,10 @@ extern "C" void app_main() {
 
     xTaskCreate(&micro_ros_task, "uros_task", UROS_TASK_STACK_SIZE, NULL,
                 TASK_PRIORITY, NULL);
+    
+    // Set GPIO 2 high to indicate successful initialization
+    ESP_ERROR_CHECK(gpio_set_level(GPIO_NUM_2, 1));
+    ESP_LOGI("MAIN", "Status LED on GPIO 2 turned ON - system ready");
 
     printf("=====================================================================\n");
     printHeapMemoryUsage();

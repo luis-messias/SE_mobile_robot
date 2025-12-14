@@ -22,8 +22,8 @@ constexpr float MAX_ANGULAR_VELOCITY = 10.0f;  // rad/s
 // Timing constants (in milliseconds)
 constexpr TickType_t CMD_VEL_TIMEOUT_MS = 2000;
 constexpr int EXECUTOR_TIMEOUT_MS = 1000;
-constexpr int MAIN_LOOP_DELAY_MS = 200;
-constexpr int PID_LOOP_DELAY_MS = 50;
+constexpr int MAIN_LOOP_DELAY_MS = 50;
+constexpr int PID_LOOP_DELAY_MS = 10;
 
 // Task configuration
 constexpr uint32_t PID_ENGINES_STACK_SIZE = 2048;
