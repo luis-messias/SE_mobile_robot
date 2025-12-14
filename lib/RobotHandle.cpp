@@ -15,13 +15,13 @@ RobotHandle::RobotHandle() {
     m_wheelsDistance = WHEEL_DISTANCE;
 
     engineDriverLeft =
-        new EngineDriver({12, 4}, LEDC_TIMER_0,
+        new EngineDriver({4, 12}, LEDC_TIMER_0,
             std::pair{LEDC_CHANNEL_0, LEDC_CHANNEL_1}, ENGINE_DEAD_ZONE);
     engineDriverRight =
-        new EngineDriver({25, 26}, LEDC_TIMER_0,
+        new EngineDriver({26, 25}, LEDC_TIMER_0,
             std::pair{LEDC_CHANNEL_2, LEDC_CHANNEL_3}, ENGINE_DEAD_ZONE);
-    encoderDriverLeft = new EncoderDriver(21, 22, ENCODER_RESOLUTION);
-    encoderDriverRight = new EncoderDriver(13, 32, ENCODER_RESOLUTION);
+    encoderDriverLeft = new EncoderDriver(22, 21, ENCODER_RESOLUTION);
+    encoderDriverRight = new EncoderDriver(32, 13, ENCODER_RESOLUTION);
     pidLeft = new PID(PID_KP, PID_KI, PID_KD);
     pidRight = new PID(PID_KP, PID_KI, PID_KD);
     m_odometry = {0,0,0,0,0};
