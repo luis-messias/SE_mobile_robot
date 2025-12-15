@@ -6,8 +6,8 @@
 // Robot configuration constants
 constexpr float ENGINE_DEAD_ZONE = 0.00f;
 constexpr float ENCODER_RESOLUTION = 823.1f;
-constexpr float WHEEL_RADIUS = 0.130f / 2.0f; // 130mm diameter / 2
-constexpr float WHEEL_DISTANCE = 0.190f;      // 190mm between wheels
+constexpr float WHEEL_RADIUS = 0.118f / 2.0f; // 118mm diameter / 2
+constexpr float WHEEL_DISTANCE = 0.189f;      // 189mm between wheels
 
 // PID controller gains
 constexpr float PID_KP = 0.01f;
